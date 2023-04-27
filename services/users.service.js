@@ -3,6 +3,7 @@ const UserModel = require("../models/users.model");
 
 /* Middlewares */
 const { hashPassword } = require("../utils/password.hash");
+const { verifyPassword } = require("../utils/password.verify");
 
 UserService.getAll = (req, res) => {};
 UserService.getById = (req, res) => {};
@@ -37,5 +38,31 @@ UserService.save = async (req, res) => {
 };
 UserService.update = (req, res) => {};
 UserService.delete = (req, res) => {};
+
+UserService.login = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    //search in database if exist the email
+    const existEmail = await UserModel.countDocuments({ email });
+    if (existEmail === 0) {
+      return res.status(400).json({ message: "El usuario no existe" });
+    } else if (existEmail === 1) {
+      //if exist, compare the password
+      const user = await UserModel.findOne({ email });
+      const passwordMatch = await verifyPassword(password, user.password);
+      if (passwordMatch) {
+        /* const token = await user.generateAuthToken();
+        res.status(200).json({ token }); */
+        res.status(200).json({ login: "true" });
+      } else {
+        res.status(400).json({ message: "Contraseña incorrecta" });
+      }
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Error al iniciar sesion" });
+  }
+};
 
 module.exports = UserService;

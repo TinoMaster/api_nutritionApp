@@ -6,4 +6,4 @@ async function verifyPassword(pass, hash) {
   return isMatch;
 }
 
-module.exports = verifyPassword;
+module.exports = { verifyPassword };
