@@ -1,5 +1,6 @@
 const UserService = () => {};
 const UserModel = require("../models/users.model");
+const signToken = require("../utils/token_sign");
 
 /* Middlewares */
 const { hashPassword } = require("../utils/password.hash");
@@ -9,12 +10,13 @@ UserService.getAll = (req, res) => {};
 UserService.getById = (req, res) => {};
 UserService.save = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
     const newPass = await hashPassword(password);
     const user = new UserModel({
       name,
       email,
       password: newPass,
+      role,
     });
     user
       .save()
@@ -52,9 +54,8 @@ UserService.login = async (req, res) => {
       const user = await UserModel.findOne({ email });
       const passwordMatch = await verifyPassword(password, user.password);
       if (passwordMatch) {
-        /* const token = await user.generateAuthToken();
-        res.status(200).json({ token }); */
-        res.status(200).json({ login: "true" });
+        const token = await signToken({ id: user._id, role: user.role });
+        res.status(200).json({ name: user.name, token });
       } else {
         res.status(400).json({ message: "Contraseña incorrecta" });
       }
